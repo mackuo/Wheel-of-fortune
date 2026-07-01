@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>幸運轉盤｜免費線上隨機抽籤工具</title>
+<meta name="description" content="輸入清單，點一下轉盤就幫你做決定。免費線上隨機選擇器，支援自訂清單、預設情境、分享連結與歷史紀錄。">
+<meta name="theme-color" content="#1B1A2E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%A1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#1B1A2E;
+    --bg-mid:#2D2B55;
+    --bg-mid2:#251F45;
+    --panel:rgba(255,255,255,0.055);
+    --panel-strong:rgba(255,255,255,0.09);
+    --panel-border:rgba(255,255,255,0.13);
+    --text-main:#F5F3FF;
+    --text-dim:#B7B3D9;
+    --text-faint:#8783AC;
+    --gold:#FFC93C;
+    --coral:#FF6B6B;
+    --teal:#4ECDC4;
+    --purple:#A78BFA;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow-soft:0 20px 50px rgba(0,0,0,0.35);
+    --font-display:'Baloo 2', 'Noto Sans TC', sans-serif;
+    --font-body:'Noto Sans TC', system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,201,60,0.14), transparent 42%),
+      radial-gradient(circle at 88% 18%, rgba(78,205,196,0.14), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(255,107,107,0.12), transparent 45%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid2) 55%, var(--bg-mid) 100%);
+    background-attachment:fixed;
+    font-family:var(--font-body);
+    color:var(--text-main);
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size:26px 26px;
+    opacity:0.35;
+    z-index:0;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::selection{background:var(--gold);color:var(--bg-deep);}
+
+  :focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+
+  /* ---------- Header ---------- */
+  .site-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+  }
+  .brand-title{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(28px,4vw,38px);
+    margin:0;
+    letter-spacing:0.5px;
+    background:linear-gradient(90deg,var(--gold),var(--coral) 60%,var(--purple));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-title .wheel-emoji{
+    -webkit-text-fill-color:initial;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+  }
+  .brand-sub{
+    margin:6px 0 0;
+    color:var(--text-dim);
+    font-size:14.5px;
+  }
+  .header-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .icon-btn{
+    width:42px;height:42px;
+    border-radius:50%;
+    border:1px solid var(--panel-border);
+    background:var(--panel);
+    color:var(--text-main);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:18px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .icon-btn:hover{background:var(--panel-strong);transform:translateY(-1px);}
+  .icon-btn:active{transform:translateY(0) scale(0.95);}
+  .icon-btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);}
+
+  /* ---------- Layout ---------- */
+  .app-main{
+    display:grid;
+    grid-template-columns:minmax(0,1.15fr) minmax(320px,0.85fr);
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .app-main{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius-lg);
+    backdrop-filter:blur(6px);
+  }
+
+  /* ---------- Wheel panel ---------- */
+  .wheel-panel{
+    padding:28px 24px 26px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    box-shadow:var(--shadow-soft);
+  }
+  .wheel-stage{
+    position:relative;
+    width:100%;
+    max-width:440px;
+    aspect-ratio:1/1;
+    margin:6px auto 6px;
+  }
+  .pointer{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:38px;height:46px;
+    z-index:5;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+    animation:pointer-wobble 2.6s ease-in-out infinite;
+    transform-origin:50% 15%;
+  }
+  .pointer svg{display:block;width:100%;height:100%;}
+  @keyframes pointer-wobble{
+    0%,100%{transform:translateX(-50%) rotate(0deg);}
+    50%{transform:translateX(-50%) rotate(-6deg);}
+  }
+  .wheel-wrap{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    will-change:transform;
+    filter:drop-shadow(0 18px 30px rgba(0,0,0,0.45));
+  }
+  .wheel-ring{
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    background:conic-gradient(from 0deg, var(--gold), var(--coral), var(--teal), var(--purple), var(--gold));
+    z-index:0;
+  }
+  .wheel-wrap canvas{
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    display:block;
+  }
+  .hub-btn{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:19%;height:19%;
+    min-width:56px;min-height:56px;
+    border-radius:50%;
+    border:3px solid var(--bg-deep);
+    background:radial-gradient(circle at 35% 30%, #fff6d8, var(--gold) 60%, #d99f1c 100%);
+    color:var(--bg-deep);
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:1px;
+    cursor:pointer;
+    z-index:6;
+    box-shadow:0 8px 18px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.5);
+    transition:transform .15s ease;
+  }
+  .hub-btn:hover{transform:translate(-50%,-50%) scale(1.05);}
+  .hub-btn:active{transform:translate(-50%,-50%) scale(0.96);}
+  .hub-btn:disabled{cursor:not-allowed;opacity:0.7;}
+
+  .wheel-meta{
+    margin-top:14px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+    min-height:20px;
+  }
+  .spin-cta{
+    margin-top:6px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 26px;
+    border-radius:999px;
+    border:none;
+    background:linear-gradient(90deg,var(--coral),var(--gold));
+    color:#22163a;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 10px 22px rgba(255,107,107,0.28);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .spin-cta:hover{transform:translateY(-2px);box-shadow:0 14px 26px rgba(255,107,107,0.36);}
+  .spin-cta:active{transform:translateY(0);}
+  .spin-cta:disabled{opacity:0.55;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  .kbd-hint{
+    margin-top:16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+  }
+  .kbd-hint span{
+    font-size:12px;
+    color:var(--text-faint);
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--panel-border);
+    padding:4px 9px;
+    border-radius:999px;
+  }
+  .kbd-hint kbd{
+    font-family:inherit;
+    font-weight:700;
+    color:var(--gold);
+  }
+
+  /* ---------- Control panel ---------- */
+  .control-panel{display:flex;flex-direction:column;gap:18px;}
+  .panel-card{padding:20px 20px 22px;}
+  .panel-card h2{
+    font-family:var(--font-display);
+    font-size:16px;
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--text-main);
+  }
+  .panel-card h2 .tag{
+    font-size:11px;
+    font-weight:600;
+    color:var(--bg-deep);
+    background:var(--teal);
+    padding:2px 8px;
+    border-radius:999px;
+  }
+
+  .preset-row{display:flex;gap:10px;margin-bottom:12px;}
+  select.preset-select{
+    flex:1;
+    appearance:none;
+    background:var(--panel-strong) url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%23B7B3D9%22 stroke-width=%222%22 fill=%22none%22/%3E%3C/svg%3E') no-repeat right 14px center;
+    border:1px solid var(--panel-border);
+    color:var(--text-main);
+    padding:10px 34px 10px 14px;
+    border-radius:var(--radius-sm);
+    font-size:14px;
+    cursor:pointer;
+  }
+  select.preset-select option{background:#211d3d;color:var(--text-main);}
+
+  .quick-add-row{display:flex;gap:8px;margin-bottom:12px;}
+  .quick-add-input{
+    flex:1;
+    background:rgba(0,0,0,0.18);
+    border:1px solid var(--panel-border);
+    color:var(--text-main);
+    padding:10px 13px;
+    border-radius:var(--radius-sm);
+    font-size:14px;
+  }
+  .quick-add-input::placeholder{color:var(--text-faint);}
+
+  .btn{
+    border-radius:var(--radius-sm);
+    border:1px solid var(--panel-border);
+    background:var(--panel-strong);
+    color:var(--text-main);
+    padding:10px 15px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .btn:hover{background:rgba(255,255,255,0.14);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:linear-gradient(90deg,var(--teal),var(--purple));
+    border:none;color:#191536;
+  }
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-ghost{background:transparent;}
+
+  .list-textarea{
+    width:100%;
+    min-height:150px;
+    resize:vertical;
+    background:rgba(0,0,0,0.18);
+    border:1px solid var(--panel-border);
+    color:var(--text-main);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:14px;
+    line-height:1.65;
+    font-family:var(--font-body);
+  }
+  .list-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .item-count{font-size:12.5px;color:var(--text-dim);}
+  .item-count.warn{color:var(--coral);}
+  .list-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-top:14px;
+    font-size:13.5px;
+    color:var(--text-dim);
+  }
+  .toggle-row input{accent-color:var(--gold);width:16px;height:16px;cursor:pointer;}
+
+  .share-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+
+  .history-list{
+    list-style:none;
+    margin:0;padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:220px;
+    overflow-y:auto;
+  }
+  .history-list::-webkit-scrollbar{width:6px;}
+  .history-list::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:6px;}
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    background:rgba(0,0,0,0.16);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius-sm);
+    padding:9px 12px;
+    font-size:13.5px;
+  }
+  .history-item .h-name{font-weight:600;}
+  .history-item .h-time{color:var(--text-faint);font-size:12px;white-space:nowrap;}
+  .history-empty{color:var(--text-faint);font-size:13px;padding:6px 2px;}
+
+  /* ---------- Footer ---------- */
+  .site-footer{
+    margin-top:44px;
+    text-align:center;
+    color:var(--text-faint);
+    font-size:12.5px;
+    line-height:1.8;
+  }
+  .site-footer a{text-decoration:underline;text-underline-offset:3px;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    left:50%;bottom:26px;
+    transform:translateX(-50%) translateY(20px);
+    background:#1c1836;
+    border:1px solid var(--panel-border);
+    color:var(--text-main);
+    padding:11px 20px;
+    border-radius:999px;
+    font-size:13.5px;
+    box-shadow:var(--shadow-soft);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(10,8,24,0.72);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    z-index:50;
+    opacity:0;pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .modal-overlay.show{opacity:1;pointer-events:auto;}
+  .modal{
+    background:linear-gradient(165deg,#2a2650,#201c3d);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius-lg);
+    padding:30px 28px 26px;
+    max-width:420px;
+    width:100%;
+    text-align:center;
+    box-shadow:var(--shadow-soft);
+    transform:scale(0.92) translateY(10px);
+    transition:transform .25s cubic-bezier(.2,.8,.3,1.2);
+  }
+  .modal-overlay.show .modal{transform:scale(1) translateY(0);}
+  .modal-eyebrow{
+    font-size:12.5px;
+    letter-spacing:2px;
+    color:var(--gold);
+    text-transform:uppercase;
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .modal-result-text{
+    font-family:var(--font-display);
+    font-size:clamp(26px,6vw,34px);
+    font-weight:800;
+    margin:4px 0 22px;
+    word-break:break-word;
+    background:linear-gradient(90deg,var(--gold),var(--coral));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .modal-btn-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .modal-close-x{
+    position:absolute;
+    top:14px;right:16px;
+    background:none;border:none;
+    color:var(--text-faint);
+    font-size:20px;
+    cursor:pointer;
+  }
+  .modal{position:relative;}
+
+  .modal-help ul{
+    list-style:none;padding:0;margin:0;
+    text-align:left;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .modal-help li{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13.5px;color:var(--text-dim);
+    border-bottom:1px dashed var(--panel-border);
+    padding-bottom:8px;
+  }
+  .modal-help kbd{
+    background:rgba(255,255,255,0.1);
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    padding:3px 8px;
+    font-weight:700;
+    color:var(--gold);
+    font-family:inherit;
+  }
+
+  #confetti-canvas{
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:55;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .pointer{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <header class="site-header">
+    <div>
+      <h1 class="brand-title"><span class="wheel-emoji">🎡</span>幸運轉盤</h1>
+      <p class="brand-sub">輸入清單，點一下轉盤就幫你做決定・免費、離線可用、資料只存在你的瀏覽器</p>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="mute-btn" title="靜音切換 (M)" aria-pressed="false">🔊</button>
+      <button class="icon-btn" id="fullscreen-btn" title="全螢幕 (F)">⛶</button>
+      <button class="icon-btn" id="help-btn" title="快捷鍵說明">?</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- Wheel -->
+    <section class="card wheel-panel">
+      <div class="wheel-stage" id="wheel-stage">
+        <div class="pointer" id="pointer">
+          <svg viewBox="0 0 38 46"><path d="M19 46 L2 14 Q2 2 19 2 Q36 2 36 14 Z" fill="#FF6B6B" stroke="#1B1A2E" stroke-width="2.5"/></svg>
+        </div>
+        <div class="wheel-ring"></div>
+        <div class="wheel-wrap" id="wheel-wrap">
+          <canvas id="wheel-canvas"></canvas>
+        </div>
+        <button class="hub-btn" id="hub-btn" title="點擊旋轉">轉！</button>
+      </div>
+      <p class="wheel-meta" id="wheel-meta">點擊輪盤中心或下方按鈕開始旋轉</p>
+      <button class="spin-cta" id="spin-btn">🎯 旋轉轉盤</button>
+      <div class="kbd-hint">
+        <span><kbd>Space</kbd> 旋轉</span>
+        <span><kbd>R</kbd> 重設</span>
+        <span><kbd>F</kbd> 全螢幕</span>
+        <span><kbd>M</kbd> 靜音</span>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="control-panel">
+
+      <div class="card panel-card">
+        <h2>📋 項目清單</h2>
+        <div class="preset-row">
+          <select class="preset-select" id="preset-select"></select>
+        </div>
+        <div class="quick-add-row">
+          <input class="quick-add-input" id="quick-add-input" placeholder="輸入項目後按 Enter 快速新增" maxlength="40">
+          <button class="btn" id="quick-add-btn">新增</button>
+        </div>
+        <textarea class="list-textarea" id="list-textarea" spellcheck="false" placeholder="每行輸入一個項目…"></textarea>
+        <div class="list-footer">
+          <span class="item-count" id="item-count">0 / 100 個項目</span>
+          <div class="list-actions">
+            <button class="btn" id="shuffle-btn">🔀 洗牌</button>
+            <button class="btn" id="reset-btn">↺ 重設</button>
+            <button class="btn btn-ghost" id="clear-btn">🗑 清除</button>
+          </div>
+        </div>
+        <label class="toggle-row">
+          <input type="checkbox" id="auto-remove-toggle">
+          抽中後自動從轉盤移除該項目
+        </label>
+        <div class="share-row">
+          <button class="btn btn-primary" id="share-btn" style="flex:1">🔗 複製分享連結</button>
+        </div>
+      </div>
+
+      <div class="card panel-card">
+        <h2>🕘 旋轉紀錄 <span class="tag" id="history-count">0</span></h2>
+        <ul class="history-list" id="history-list">
+          <li class="history-empty">還沒有任何紀錄，轉一下試試看！</li>
+        </ul>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    這是一個免費的線上隨機選擇器，所有資料僅儲存在你的瀏覽器裝置中，不會上傳到任何伺服器。<br>
+    可自由部署到 GitHub Pages、Netlify、Cloudflare Pages 等免費空間。
+  </footer>
+</div>
+
+<!-- Result Modal -->
+<div class="modal-overlay" id="result-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="result-text">
+    <button class="modal-close-x" id="result-close-x" aria-label="關閉">✕</button>
+    <p class="modal-eyebrow">結果揭曉</p>
+    <p class="modal-result-text" id="result-text">—</p>
+    <div class="modal-btn-row">
+      <button class="btn btn-primary" id="result-again-btn">🎯 再轉一次</button>
+      <button class="btn" id="result-remove-btn">🗑 移除此項目</button>
+      <button class="btn btn-ghost" id="result-close-btn">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="help-overlay">
+  <div class="modal modal-help" role="dialog" aria-modal="true">
+    <button class="modal-close-x" id="help-close-x" aria-label="關閉">✕</button>
+    <p class="modal-eyebrow" style="text-align:center">快捷鍵</p>
+    <ul>
+      <li><span>旋轉轉盤</span><kbd>Space</kbd></li>
+      <li><span>重設清單（還原已移除項目）</span><kbd>R</kbd></li>
+      <li><span>全螢幕切換</span><kbd>F</kbd></li>
+      <li><span>靜音切換</span><kbd>M</kbd></li>
+      <li><span>關閉視窗</span><kbd>Esc</kbd></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Data ---------------- */
+  var PALETTE = ['#FF6B6B','#FFC93C','#4ECDC4','#A78BFA','#FF9F6B','#6BCB77','#FF6BAF','#6BA5FF','#FFE156','#C084FC'];
+
+  var PRESETS = {
+    "預設：誰是幸運兒": ["小明","小華","小美","阿凱","雅婷","志豪"],
+    "是 / 否": ["是","否"],
+    "午餐吃什麼": ["滷肉飯","牛肉麵","便當","壽司","義大利麵","漢堡","小火鍋","水餃"],
+    "動物": ["狗","貓","兔子","老虎","大象","貓熊","貓頭鷹","狐狸"],
+    "水果": ["蘋果","香蕉","葡萄","西瓜","芒果","鳳梨","草莓","奇異果"],
+    "甜點": ["蛋糕","布丁","冰淇淋","馬卡龍","鬆餅","珍珠奶茶","提拉米蘇"],
+    "電影類型": ["喜劇","恐怖","愛情","科幻","動作","懸疑","動畫","紀錄片"],
+    "誰先開始": ["我先","你先","猜拳決定","丟硬幣"],
+    "真心話大冒險": ["真心話","大冒險"],
+    "表情符號": ["😀","😎","🥳","😴","🤔","😱","🥰","🤯"]
+  };
+
+  var MAX_ITEMS = 100;
+  var STORAGE_KEY = "luckywheel_items_v1";
+  var HISTORY_KEY = "luckywheel_history_v1";
+  var MUTE_KEY = "luckywheel_muted_v1";
+
+  /* ---------------- State ---------------- */
+  var wheelItems = [];
+  var isSpinning = false;
+  var currentRotation = 0;
+  var muted = localStorage.getItem(MUTE_KEY) === "1";
+  var history = [];
+  try { history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch(e){ history = []; }
+
+  /* ---------------- DOM refs ---------------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $("wheel-stage");
+  var wheelWrap = $("wheel-wrap");
+  var canvas = $("wheel-canvas");
+  var ctx = canvas.getContext("2d");
+  var hubBtn = $("hub-btn");
+  var spinBtn = $("spin-btn");
+  var wheelMeta = $("wheel-meta");
+  var textarea = $("list-textarea");
+  var itemCountEl = $("item-count");
+  var presetSelect = $("preset-select");
+  var quickAddInput = $("quick-add-input");
+  var quickAddBtn = $("quick-add-btn");
+  var shuffleBtn = $("shuffle-btn");
+  var resetBtn = $("reset-btn");
+  var clearBtn = $("clear-btn");
+  var autoRemoveToggle = $("auto-remove-toggle");
+  var shareBtn = $("share-btn");
+  var historyList = $("history-list");
+  var historyCount = $("history-count");
+  var muteBtn = $("mute-btn");
+  var fullscreenBtn = $("fullscreen-btn");
+  var helpBtn = $("help-btn");
+  var helpOverlay = $("help-overlay");
+  var helpCloseX = $("help-close-x");
+  var resultOverlay = $("result-overlay");
+  var resultText = $("result-text");
+  var resultAgainBtn = $("result-again-btn");
+  var resultRemoveBtn = $("result-remove-btn");
+  var resultCloseBtn = $("result-close-btn");
+  var resultCloseX = $("result-close-x");
+  var toastEl = $("toast");
+  var confettiCanvas = $("confetti-canvas");
+  var confettiCtx = confettiCanvas.getContext("2d");
+
+  var lastWinnerIndex = -1;
+  var toastTimer = null;
+
+  /* ---------------- Utilities ---------------- */
+  function parseLines(str){
+    return str.split("\n").map(function(s){ return s.trim(); }).filter(function(s){ return s.length>0; });
+  }
+
+  function getContrastColor(hex){
+    var c = hex.replace('#','');
+    var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    var lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+    return lum > 0.6 ? '#1B1A2E' : '#FFFFFF';
+  }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------------- Audio (WebAudio, no files needed) ---------------- */
+  var audioCtx = null;
+  function ensureAudio(){
+    if (!audioCtx){
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ audioCtx = null; }
+    }
+    return audioCtx;
+  }
+  function playTick(){
+    if (muted) return;
+    var ac = ensureAudio();
+    if (!ac) return;
+    var osc = ac.createOscillator();
+    var gain = ac.createGain();
+    osc.type = "square";
+    osc.frequency.value = 720;
+    gain.gain.setValueAtTime(0.06, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.06);
+    osc.connect(gain).connect(ac.destination);
+    osc.start();
+    osc.stop(ac.currentTime + 0.07);
+  }
+  function playWin(){
+    if (muted) return;
+    var ac = ensureAudio();
+    if (!ac) return;
+    var freqs = [523.25, 659.25, 783.99, 1046.5];
+    freqs.forEach(function(f, i){
+      var osc = ac.createOscillator();
+      var gain = ac.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = f;
+      var start = ac.currentTime + i*0.09;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(0.09, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start+0.5);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(start);
+      osc.stop(start+0.55);
+    });
+  }
+
+  /* ---------------- Wheel drawing ---------------- */
+  var dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  function resizeCanvas(){
+    var size = stage.clientWidth;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + "px";
+    canvas.style.height = size + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawWheel();
+  }
+
+  function drawWheel(){
+    var size = stage.clientWidth;
+    if (!size) return;
+    ctx.clearRect(0,0,size,size);
+    var n = wheelItems.length;
+    var cx = size/2, cy = size/2, radius = size/2 - 3;
+
+    if (n === 0){
+      ctx.beginPath();
+      ctx.arc(cx,cy,radius,0,Math.PI*2);
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.fill();
+      ctx.fillStyle = "#8783AC";
+      ctx.font = "600 15px 'Noto Sans TC', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("請新增項目", cx, cy);
+      return;
+    }
+
+    var anglePer = (2*Math.PI) / n;
+    var fontSize = Math.max(11, Math.min(18, 260/n));
+    var maxLen = n<=8 ? 16 : (n<=16 ? 10 : 6);
+
+    for (var i=0; i<n; i++){
+      var start = i*anglePer - Math.PI/2;
+      var end = start + anglePer;
+      var color = PALETTE[i % PALETTE.length];
+
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,radius,start,end);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(27,26,46,0.35)";
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(start + anglePer/2);
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = getContrastColor(color);
+      ctx.font = "700 " + fontSize + "px 'Noto Sans TC', sans-serif";
+      var label = wheelItems[i];
+      if (label.length > maxLen) label = label.slice(0, maxLen-1) + "…";
+      ctx.fillText(label, radius - 16, 0);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx,cy,size*0.065,0,Math.PI*2);
+    ctx.fillStyle = "#1B1A2E";
+    ctx.fill();
+  }
+
+  /* ---------------- List <-> wheel sync ---------------- */
+  function syncFromTextarea(save){
+    var lines = parseLines(textarea.value);
+    var warned = false;
+    if (lines.length > MAX_ITEMS){
+      lines = lines.slice(0, MAX_ITEMS);
+      warned = true;
+    }
+    wheelItems = lines;
+    itemCountEl.textContent = lines.length + " / " + MAX_ITEMS + " 個項目";
+    itemCountEl.classList.toggle("warn", warned);
+    if (warned) showToast("清單項目太多，已限制為 100 個");
+    drawWheel();
+    updateSpinAvailability();
+    if (save !== false) localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+  }
+
+  function setTextareaItems(items){
+    textarea.value = items.join("\n");
+    syncFromTextarea();
+  }
+
+  function updateSpinAvailability(){
+    var can = wheelItems.length > 0 && !isSpinning;
+    hubBtn.disabled = !can;
+    spinBtn.disabled = !can;
+    wheelMeta.textContent = wheelItems.length === 0
+      ? "請先在右側清單新增至少一個項目"
+      : (isSpinning ? "旋轉中…" : "點擊輪盤中心或下方按鈕開始旋轉");
+  }
+
+  /* ---------------- Presets ---------------- */
+  function populatePresets(){
+    Object.keys(PRESETS).forEach(function(name){
+      var opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      presetSelect.appendChild(opt);
+    });
+  }
+  presetSelect.addEventListener("change", function(){
+    var items = PRESETS[presetSelect.value];
+    if (items) setTextareaItems(items);
+  });
+
+  /* ---------------- Spin logic ---------------- */
+  function pickWeightedIndex(){
+    return Math.floor(Math.random() * wheelItems.length);
+  }
+
+  function spin(){
+    if (isSpinning || wheelItems.length === 0) return;
+    isSpinning = true;
+    updateSpinAvailability();
+
+    var n = wheelItems.length;
+    var anglePerDeg = 360 / n;
+    var winnerIndex = pickWeightedIndex();
+    var jitter = (Math.random() - 0.5) * anglePerDeg * 0.6;
+    var targetLocal = winnerIndex*anglePerDeg + anglePerDeg/2 + jitter;
+    targetLocal = ((targetLocal % 360) + 360) % 360;
+
+    var requiredMod = (360 - targetLocal + 360) % 360;
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var extraSpins = reduceMotion ? 2 : (6 + Math.floor(Math.random()*4));
+    var base = currentRotation - (currentRotation % 360);
+    var toDeg = base + 360*extraSpins + requiredMod;
+    if (toDeg <= currentRotation) toDeg += 360;
+
+    var fromDeg = currentRotation;
+    var duration = reduceMotion ? 900 : (5000 + Math.random()*800);
+    var startTime = null;
+    var lastSliceIdx = null;
+
+    function frame(now){
+      if (startTime === null) startTime = now;
+      var t = Math.min(1, (now - startTime) / duration);
+      var eased = 1 - Math.pow(1-t, 5);
+      var current = fromDeg + (toDeg - fromDeg) * eased;
+      wheelWrap.style.transform = "rotate(" + current + "deg)";
+
+      var localAngle = ((360 - (current % 360)) + 360) % 360;
+      var idx = Math.floor(localAngle / anglePerDeg) % n;
+      if (idx !== lastSliceIdx){
+        lastSliceIdx = idx;
+        playTick();
+      }
+
+      if (t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        currentRotation = toDeg;
+        isSpinning = false;
+        updateSpinAvailability();
+        onSpinComplete(winnerIndex);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function onSpinComplete(winnerIndex){
+    lastWinnerIndex = winnerIndex;
+    var winner = wheelItems[winnerIndex];
+    playWin();
+    launchConfetti();
+    showResultModal(winner);
+    addHistory(winner);
+  }
+
+  /* ---------------- Result modal ---------------- */
+  function showResultModal(text){
+    resultText.textContent = text;
+    resultOverlay.classList.add("show");
+  }
+  function closeResultModal(){
+    resultOverlay.classList.remove("show");
+  }
+  resultCloseBtn.addEventListener("click", closeResultModal);
+  resultCloseX.addEventListener("click", closeResultModal);
+  resultAgainBtn.addEventListener("click", function(){
+    closeResultModal();
+    setTimeout(spin, 150);
+  });
+  resultRemoveBtn.addEventListener("click", function(){
+    removeWinnerFromWheel();
+    closeResultModal();
+  });
+
+  function removeWinnerFromWheel(){
+    if (lastWinnerIndex < 0 || lastWinnerIndex >= wheelItems.length) return;
+    wheelItems.splice(lastWinnerIndex, 1);
+    lastWinnerIndex = -1;
+    drawWheel();
+    itemCountEl.textContent = wheelItems.length + " / " + MAX_ITEMS + " 個項目";
+    updateSpinAvailability();
+    showToast("已從轉盤移除該項目（清單原文未變）");
+  }
+
+  /* ---------------- History ---------------- */
+  function addHistory(text){
+    var time = new Date();
+    var hh = String(time.getHours()).padStart(2,"0");
+    var mm = String(time.getMinutes()).padStart(2,"0");
+    history.unshift({ text: text, time: hh+":"+mm });
+    history = history.slice(0, 50);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistory();
+  }
+  function renderHistory(){
+    historyCount.textContent = history.length;
+    if (history.length === 0){
+      historyList.innerHTML = '<li class="history-empty">還沒有任何紀錄，轉一下試試看！</li>';
+      return;
+    }
+    historyList.innerHTML = history.map(function(h){
+      return '<li class="history-item"><span class="h-name">' + escapeHtml(h.text) + '</span><span class="h-time">' + h.time + '</span></li>';
+    }).join("");
+  }
+  function escapeHtml(s){
+    var d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  /* ---------------- Confetti ---------------- */
+  var confettiParticles = [];
+  var confettiRunning = false;
+  function resizeConfettiCanvas(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  function launchConfetti(){
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    resizeConfettiCanvas();
+    confettiParticles = [];
+    var count = 90;
+    for (var i=0;i<count;i++){
+      confettiParticles.push({
+        x: confettiCanvas.width/2 + (Math.random()-0.5)*200,
+        y: confettiCanvas.height*0.35,
+        vx: (Math.random()-0.5)*9,
+        vy: -Math.random()*9 - 4,
+        size: 5 + Math.random()*6,
+        color: PALETTE[Math.floor(Math.random()*PALETTE.length)],
+        rot: Math.random()*Math.PI*2,
+        vr: (Math.random()-0.5)*0.3,
+        life: 0
+      });
+    }
+    if (!confettiRunning){
+      confettiRunning = true;
+      requestAnimationFrame(confettiFrame);
+    }
+  }
+  function confettiFrame(){
+    confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    var alive = false;
+    confettiParticles.forEach(function(p){
+      p.life += 1;
+      if (p.life > 130) return;
+      p.vy += 0.25;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      if (p.y < confettiCanvas.height + 20){
+        alive = true;
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rot);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+        confettiCtx.restore();
+      }
+    });
+    if (alive){
+      requestAnimationFrame(confettiFrame);
+    } else {
+      confettiRunning = false;
+      confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    }
+  }
+
+  /* ---------------- Controls wiring ---------------- */
+  textarea.addEventListener("input", function(){ syncFromTextarea(); });
+
+  quickAddBtn.addEventListener("click", quickAdd);
+  quickAddInput.addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); quickAdd(); }
+  });
+  function quickAdd(){
+    var val = quickAddInput.value.trim();
+    if (!val) return;
+    var lines = parseLines(textarea.value);
+    lines.push(val);
+    setTextareaItems(lines);
+    quickAddInput.value = "";
+    quickAddInput.focus();
+  }
+
+  shuffleBtn.addEventListener("click", function(){
+    var lines = parseLines(textarea.value);
+    for (var i = lines.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i+1));
+      var tmp = lines[i]; lines[i] = lines[j]; lines[j] = tmp;
+    }
+    setTextareaItems(lines);
+  });
+
+  resetBtn.addEventListener("click", function(){
+    syncFromTextarea();
+    showToast("已重設轉盤內容");
+  });
+
+  clearBtn.addEventListener("click", function(){
+    if (textarea.value.trim() === "") return;
+    if (confirm("確定要清除整份清單嗎？")){
+      setTextareaItems([]);
+    }
+  });
+
+  autoRemoveToggle.addEventListener("change", function(){
+    // handled at spin-complete time via resultRemoveBtn logic when checked
+  });
+
+  shareBtn.addEventListener("click", function(){
+    var items = parseLines(textarea.value);
+    var encoded = encodeURIComponent(items.join("|"));
+    var url = location.origin + location.pathname + "#list=" + encoded;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){
+        showToast("分享連結已複製！");
+      }).catch(function(){
+        promptCopy(url);
+      });
+    } else {
+      promptCopy(url);
+    }
+  });
+  function promptCopy(url){
+    window.prompt("複製這個連結分享給朋友：", url);
+  }
+
+  hubBtn.addEventListener("click", spin);
+  spinBtn.addEventListener("click", spin);
+
+  /* Auto-remove after spin, if toggled on */
+  var originalOnSpinComplete = onSpinComplete;
+  onSpinComplete = function(winnerIndex){
+    originalOnSpinComplete(winnerIndex);
+    if (autoRemoveToggle.checked){
+      setTimeout(function(){
+        removeWinnerFromWheel();
+      }, 50);
+    }
+  };
+
+  /* ---------------- Mute / Fullscreen / Help ---------------- */
+  function applyMuteUI(){
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    muteBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+  }
+  muteBtn.addEventListener("click", function(){
+    muted = !muted;
+    localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
+    applyMuteUI();
+  });
+
+  fullscreenBtn.addEventListener("click", function(){
+    if (!document.fullscreenElement){
+      document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+    }
+  });
+
+  helpBtn.addEventListener("click", function(){ helpOverlay.classList.add("show"); });
+  helpCloseX.addEventListener("click", function(){ helpOverlay.classList.remove("show"); });
+  helpOverlay.addEventListener("click", function(e){ if (e.target === helpOverlay) helpOverlay.classList.remove("show"); });
+  resultOverlay.addEventListener("click", function(e){ if (e.target === resultOverlay) closeResultModal(); });
+
+  /* ---------------- Keyboard shortcuts ---------------- */
+  document.addEventListener("keydown", function(e){
+    var tag = document.activeElement && document.activeElement.tagName;
+    var typing = tag === "TEXTAREA" || tag === "INPUT";
+
+    if (e.key === "Escape"){
+      closeResultModal();
+      helpOverlay.classList.remove("show");
+      return;
+    }
+    if (typing) return;
+
+    if (e.code === "Space"){ e.preventDefault(); spin(); }
+    else if (e.key === "r" || e.key === "R"){ syncFromTextarea(); showToast("已重設轉盤內容"); }
+    else if (e.key === "f" || e.key === "F"){ fullscreenBtn.click(); }
+    else if (e.key === "m" || e.key === "M"){ muteBtn.click(); }
+  });
+
+  /* ---------------- Init ---------------- */
+  function loadFromHashOrStorage(){
+    var hash = location.hash;
+    if (hash && hash.indexOf("#list=") === 0){
+      try {
+        var decoded = decodeURIComponent(hash.slice(6));
+        var items = decoded.split("|").filter(function(s){ return s.trim().length>0; });
+        if (items.length){
+          setTextareaItems(items);
+          showToast("已載入分享的清單");
+          return;
+        }
+      } catch(e){}
+    }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(e){}
+    if (saved && saved.length){
+      setTextareaItems(saved);
+    } else {
+      setTextareaItems(PRESETS["預設：誰是幸運兒"]);
+    }
+  }
+
+  populatePresets();
+  applyMuteUI();
+  renderHistory();
+  loadFromHashOrStorage();
+  resizeCanvas();
+  updateSpinAvailability();
+
+  window.addEventListener("resize", function(){
+    resizeCanvas();
+  });
+
+})();
+</script>
+</body>
+</html>
